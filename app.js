@@ -4,6 +4,8 @@ import * as webllm from "https://esm.run/@mlc-ai/web-llm";
 const MODEL_ID = "DeepSeek-R1-Distill-Qwen-1.5B-q4f16_1-MLC";
 
 let engine;
+let chatHistory = [];
+
 const progressTrack = document.getElementById("progressTrack");
 const userText = document.getElementById("userText");
 const sendAction = document.getElementById("sendAction");
@@ -11,22 +13,26 @@ const screenOutput = document.getElementById("screenOutput");
 
 async function launchSystemEngine() {
     try {
-        engine = new webllm.CreateGenericEngine();
-        
-        // Track download chunks into the visitor's local temp storage
-        engine.setInitProgressCallback((report) => {
-            progressTrack.innerText = report.text;
-        });
-
-        // Initialize the neural layers right inside their graphic card processing cores
-        await engine.reload(MODEL_ID, {
-            system_prompt: "You are BandAI, a strict, expert medical first-aid advisor bot. Provide actionable, clear steps. Keep it direct."
+        // Initialize and stream the download directly into local browser cache
+        engine = await webllm.CreateMLCEngine(MODEL_ID, {
+            initProgressCallback: (report) => {
+                progressTrack.innerText = report.text;
+            }
         });
 
         progressTrack.innerText = "DeepSeek-1.5B: 100% Locally Active (WebGPU)";
         userText.disabled = false;
         sendAction.disabled = false;
         userText.placeholder = "Query DeepSeek locally...";
+
+        // Initialize chat history with your custom logic constraints
+        chatHistory = [
+            { 
+                role: "system", 
+                content: "You are BandAI, a strict, expert medical first-aid advisor bot. Provide actionable steps." 
+            }
+        ];
+
     } catch (err) {
         progressTrack.innerText = "WebGPU Compilation Failed. Use Chrome/Edge on desktop.";
         console.error(err);
@@ -40,35 +46,59 @@ async function handleMessageExchange() {
     // Render user bubble
     screenOutput.innerHTML += `<div class="bubble user-bubble">${rawPrompt}</div>`;
     userText.value = "";
+    
+    // Disable inputs while the local AI thinks
+    userText.disabled = true;
+    sendAction.disabled = true;
+
+    // Create placeholder for AI response
+    const aiBubbleId = "ai-" + Date.now();
+    screenOutput.innerHTML += `<div id="${aiBubbleId}" class="bubble ai-bubble">Thinking...</div>`;
     screenOutput.scrollTop = screenOutput.scrollHeight;
 
-    // Setup empty streaming frame
-    const aiResponseFrame = document.createElement("div");
-    aiResponseFrame.className = "bubble ai-bubble";
-    aiResponseFrame.innerText = "Analyzing parameters...";
-    screenOutput.appendChild(aiResponseFrame);
-
     try {
-        const conversationLog = [{ role: "user", content: rawPrompt }];
-        
-        // Target client-side hardware for token computation
-        const executionPipeline = await engine.chat.completions.create({ 
-            messages: conversationLog,
-            stream: true 
+        // Append user prompt to ongoing history
+        chatHistory.push({ role: "user", content: rawPrompt });
+
+        // Query the local WebGPU engine
+        const chunks = await engine.chat.completions.create({
+            messages: chatHistory,
+            stream: true // Enables smooth, real-time word streaming
         });
-        
-        aiResponseFrame.innerText = "";
-        for await (const chunk of executionPipeline) {
-            const letter = chunk.choices[0]?.delta?.content || "";
-            aiResponseFrame.innerText += letter;
+
+        let fullResponse = "";
+        const aiBubble = document.getElementById(aiBubbleId);
+        aiBubble.innerText = ""; 
+
+        for await (const chunk of chunks) {
+            const content = chunk.choices[0]?.delta?.content || "";
+            fullResponse += content;
+            aiBubble.innerText = fullResponse;
             screenOutput.scrollTop = screenOutput.scrollHeight;
         }
-    } catch (error) {
-        aiResponseFrame.innerText = "Hardware execution error.";
+
+        // Save AI response to history context
+        chatHistory.push({ role: "assistant", content: fullResponse });
+
+    } catch (err) {
+        console.error("Inference Error: ", err);
+        document.getElementById(aiBubbleId).innerText = "Error generating local response.";
+    } finally {
+        // Re-enable inputs
+        userText.disabled = false;
+        sendAction.disabled = false;
+        userText.focus();
     }
 }
 
-sendAction.onclick = handleMessageExchange;
-userText.onkeypress = (e) => { if (e.key === "Enter") handleMessageExchange(); };
+// Event Listeners to bind UI buttons
+sendAction.addEventListener("click", handleMessageExchange);
+userText.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        handleMessageExchange();
+    }
+});
 
-window.onload = launchSystemEngine;
+// Auto-trigger engine boot on page load
+launchSystemEngine();
