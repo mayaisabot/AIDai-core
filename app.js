@@ -64,7 +64,7 @@ async function handleMessageExchange() {
             messages: chatHistory,
             stream: true // Enables smooth, real-time word streaming
         });
-
+ 
         let fullResponse = "";
         const aiBubble = document.getElementById(aiBubbleId);
         aiBubble.innerText = ""; 
