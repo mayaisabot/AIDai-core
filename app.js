@@ -1,8 +1,7 @@
 import * as webllm from "https://esm.run/@mlc-ai/web-llm";
 
 // Specify the official MLC-compiled DeepSeek 1.5B model ID
-const MODEL_ID = "Qwen2.5-1.5B-Instruct-q4f16_1-MLC";
-
+const MODEL_ID = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
 let engine;
 let chatHistory = [];
 
