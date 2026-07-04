@@ -13,9 +13,8 @@ const screenOutput = document.getElementById("screenOutput");
 
 async function launchSystemEngine() {
     try {
-        // OPTIMIZATION: Context length limited to boost compilation speed and save memory
+        // Correct initialization structure to handle fast compilation loading without breaking
         engine = await webllm.CreateMLCEngine(MODEL_ID, {
-            context_window_size: 2048, 
             initProgressCallback: (report) => {
                 progressTrack.innerText = report.text;
             }
