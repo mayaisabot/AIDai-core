@@ -1,7 +1,7 @@
 import * as webllm from "https://esm.run/@mlc-ai/web-llm";
 
-// Switched to a ultra-lightweight 1B model to instantly clear the pipeline warmup
-const MODEL_ID = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
+// Using the Qwen 1.5B model that successfully booted on your hardware
+const MODEL_ID = "Qwen2.5-1.5B-Instruct-q4f16_1-MLC";
 
 let engine;
 let chatHistory = [];
@@ -20,13 +20,13 @@ async function launchSystemEngine() {
             }
         });
 
-        // Updated UI labels to match your custom model setup
-        progressTrack.innerText = "Llama-1B: 100% Locally Active (WebGPU)";
+        // Updated UI labels 
+        progressTrack.innerText = "BandAI: 100% Locally Active (WebGPU)";
         userText.disabled = false;
         sendAction.disabled = false;
         userText.placeholder = "Query BandAI locally...";
 
-        // Upgraded system prompt to bypass safety alignment disclaimers
+        // The safety/filter bypass so it answers first-aid questions without refusing
         chatHistory = [
             { 
                 role: "system", 
