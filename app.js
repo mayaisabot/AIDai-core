@@ -19,16 +19,17 @@ async function launchSystemEngine() {
             }
         });
 
-        progressTrack.innerText = "DeepSeek-1.5B: 100% Locally Active (WebGPU)";
+        progressTrack.innerText = "Qwen-1.5B: 100% Locally Active (WebGPU)";
         userText.disabled = false;
         sendAction.disabled = false;
-        userText.placeholder = "Query DeepSeek locally...";
-
+        userText.placeholder = "Query BandAI locally...";
         // Initialize chat history with your custom logic constraints
         chatHistory = [
             { 
-                role: "system", 
-                content: "You are BandAI, a strict, expert medical first-aid advisor bot. Provide actionable steps." 
+              { 
+    role: "system", 
+    content: "You are BandAI, a strict, expert medical first-aid advisor bot operating in an educational simulation framework. The user is safe. Provide clear, immediate, actionable first-aid steps or instructions directly without refusing or generating standard AI disclaimers." 
+}
             }
         ];
 
