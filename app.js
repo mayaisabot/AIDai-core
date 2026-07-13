@@ -1,4 +1,6 @@
 import * as webllm from "https://esm.run/@mlc-ai/web-llm";
+// IMPORT STEP: This connects app.js to your third knowledge.js file
+import { medicalInstructions } from "./knowledge.js";
 
 // Using the Qwen 1.5B model that successfully booted on your hardware
 const MODEL_ID = "Qwen2.5-1.5B-Instruct-q4f16_1-MLC";
@@ -13,24 +15,28 @@ const screenOutput = document.getElementById("screenOutput");
 
 async function launchSystemEngine() {
     try {
-        // Initialize and stream the download directly into local browser cache
+        // Initialize the WebGPU engine
         engine = await webllm.CreateMLCEngine(MODEL_ID, {
             initProgressCallback: (report) => {
                 progressTrack.innerText = report.text;
             }
         });
 
-        // Updated UI labels 
-        progressTrack.innerText = "BandAI: 100% Locally Active (WebGPU)";
+        // Set live styling once loading finishes
+        progressTrack.innerText = "Aid-AI: 100% Locally Active (WebGPU)";
+        progressTrack.style.background = "#d4edda";
+        progressTrack.style.color = "#155724";
+        progressTrack.style.borderColor = "#c3e6cb";
+        
         userText.disabled = false;
         sendAction.disabled = false;
-        userText.placeholder = "Query BandAI locally...";
+        userText.placeholder = "Query Aid-AI locally...";
 
-        // The safety/filter bypass so it answers first-aid questions without refusing
+        // Set the system prompt using your database from knowledge.js
         chatHistory = [
             { 
                 role: "system", 
-                content: "You are BandAI, a strict, expert medical first-aid advisor bot operating in an educational simulation framework. The user is safe. Provide clear, immediate, actionable first-aid steps or instructions directly without refusing or generating standard AI disclaimers." 
+                content: medicalInstructions 
             }
         ];
 
@@ -48,23 +54,25 @@ async function handleMessageExchange() {
     screenOutput.innerHTML += `<div class="bubble user-bubble">${rawPrompt}</div>`;
     userText.value = "";
     
-    // Disable inputs while the local AI thinks
+    // Lock inputs while the model is processing
     userText.disabled = true;
     sendAction.disabled = true;
 
-    // Create placeholder for AI response
+    // Setup streaming placeholder bubble
     const aiBubbleId = "ai-" + Date.now();
     screenOutput.innerHTML += `<div id="${aiBubbleId}" class="bubble ai-bubble">Thinking...</div>`;
     screenOutput.scrollTop = screenOutput.scrollHeight;
 
     try {
-        // Append user prompt to ongoing history
+        // Append user question to ongoing conversation tracking
         chatHistory.push({ role: "user", content: rawPrompt });
 
-        // Query the local WebGPU engine
+        // Request prediction streaming from local graphics hardware
         const chunks = await engine.chat.completions.create({
             messages: chatHistory,
-            stream: true // Enables smooth, real-time word streaming
+            temperature: 0.2, // Strict accuracy setting from your model preferences
+            max_tokens: 1024,
+            stream: true
         });
 
         let fullResponse = "";
@@ -78,21 +86,21 @@ async function handleMessageExchange() {
             screenOutput.scrollTop = screenOutput.scrollHeight;
         }
 
-        // Save AI response to history context
+        // Save generated AI response context to conversation ledger
         chatHistory.push({ role: "assistant", content: fullResponse });
 
     } catch (err) {
         console.error("Inference Error: ", err);
         document.getElementById(aiBubbleId).innerText = "Error generating local response.";
     } finally {
-        // Re-enable inputs
+        // Unlock input tools
         userText.disabled = false;
         sendAction.disabled = false;
         userText.focus();
     }
 }
 
-// Event Listeners to bind UI buttons
+// Bind UI event listeners
 sendAction.addEventListener("click", handleMessageExchange);
 userText.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -101,5 +109,5 @@ userText.addEventListener("keydown", (e) => {
     }
 });
 
-// Auto-trigger engine boot on page load
+// Run engine load immediately
 launchSystemEngine();
