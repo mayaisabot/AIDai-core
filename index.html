@@ -1,38 +1,39 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BandAI Edge Studio</title>
+    <title>Aid-AI - Local First Aid Assistant</title>
     <style>
-        body { font-family: -apple-system, system-ui, sans-serif; background-color: #0d1117; color: #c9d1d9; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        .window-frame { width: 100%; max-width: 650px; height: 85vh; background: #161b22; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; border: 1px solid #30363d; }
-        .status-header { padding: 14px; background: #0d1117; text-align: center; font-size: 0.85rem; color: #58a6ff; border-bottom: 1px solid #30363d; font-family: monospace; }
-        .chat-area { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
-        .bubble { padding: 12px 16px; border-radius: 8px; max-width: 85%; line-height: 1.5; font-size: 0.95rem; }
-        .user-bubble { background: #1f6feb; color: white; align-self: flex-end; border-bottom-right-radius: 0; }
-        .ai-bubble { background: #21262d; color: #c9d1d9; align-self: flex-start; border-bottom-left-radius: 0; border: 1px solid #30363d; }
-        .control-bar { display: flex; padding: 14px; background: #0d1117; gap: 10px; border-top: 1px solid #30363d; }
-        input { flex: 1; background: #21262d; border: 1px solid #30363d; padding: 12px; border-radius: 6px; color: white; outline: none; font-size: 0.95rem; }
-        input:focus { border-color: #58a6ff; }
-        button { background: #238636; color: white; border: none; padding: 0 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
-        button:disabled { background: #21262d; color: #8b949e; cursor: not-allowed; border: 1px solid #30363d; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f4f6f8; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .chat-container { width: 100%; max-width: 600px; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; height: 80vh; overflow: hidden; }
+        .header { background: #d9534f; color: white; padding: 15px; font-weight: bold; text-align: center; font-size: 1.2rem; }
+        .status { background: #f8d7da; color: #721c24; text-align: center; padding: 8px; font-size: 0.9rem; border-bottom: 1px solid #f5c6cb; }
+        .chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        .bubble { max-width: 80%; padding: 12px 16px; border-radius: 18px; font-size: 0.95rem; line-height: 1.4; word-wrap: break-word; }
+        .user-bubble { background: #007bff; color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .ai-bubble { background: #e9ecef; color: #333; align-self: flex-start; border-bottom-left-radius: 4px; white-space: pre-wrap; }
+        .input-area { display: flex; padding: 15px; border-top: 1px solid #eee; background: #fff; gap: 10px; }
+        input { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; outline: none; }
+        button { background: #d9534f; color: white; border: none; padding: 0 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+        button:hover { background: #c9302c; }
+        button:disabled, input:disabled { background: #e9ecef; color: #ccc; cursor: not-allowed; }
     </style>
-    <script type="module" src="./app.js"></script>
 </head>
 <body>
 
-<div class="window-frame">
-    <div class="status-header" id="progressTrack">Warming up WebGPU pipeline...</div>
-    <div class="chat-area" id="screenOutput">
-        <div class="bubble ai-bubble">Core Engine Ready. Once DeepSeek-1.5B compiles to your local browser GPU, we can test custom logic constraints.</div>
+    <div class="chat-container">
+        <div class="header">Aid-AI Assistant</div>
+        <div id="progressTrack" class="status">Downloading Local AI Engine (WebGPU)...</div>
+        <div id="screenOutput" class="chat-box"></div>
+        
+        <div class="input-area">
+            <input type="text" id="userText" placeholder="Please wait for the model to load..." disabled>
+            <button id="sendAction" disabled>Send</button>
+        </div>
     </div>
-    <div class="control-bar">
-        <input type="text" id="userText" placeholder="Downloading parameters..." disabled>
-        <button id="sendAction" disabled>Send</button>
-    </div>
-</div>
+
+    <script type="module" src="app.js"></script>
 
 </body>
 </html>
