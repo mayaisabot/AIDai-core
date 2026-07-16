@@ -213,12 +213,15 @@ Assistant: Hi, I’m Aid-AI! I’m an AI tool you can use for medical/first-aid 
 // =========================================================================
 
 async function launchSystemEngine() {
-    try {
-        engine = await webllm.CreateMLCEngine(MODEL_ID, {
+  try {
+        engine = await CreateMLCEngine(MODEL_ID, {
             initProgressCallback: (report) => {
                 progressTrack.innerText = report.text;
+            }, // <--- THIS COMMA IS CRITICAL! It separates the settings.
+            
+            chatOpts: {
+                context_window_size: 8192
             }
-            context_window_size: 8192
         });
 
         progressTrack.innerText = "Aid-AI: 100% Locally Active (WebGPU)";
