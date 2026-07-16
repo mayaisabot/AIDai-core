@@ -259,7 +259,7 @@ async function handleMessageExchange() {
         const chunks = await engine.chat.completions.create({
             messages: chatHistory,
             temperature: 0.2,
-            max_tokens: 2048,
+            max_tokens: 1024,
             stream: true
         });
 
