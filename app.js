@@ -1,5 +1,4 @@
 import * as webllm from "https://esm.run/@mlc-ai/web-llm";
-
 // Using the Qwen 1.5B model that successfully booted on your hardware
 const MODEL_ID = "Qwen2.5-1.5B-Instruct-q4f16_1-MLC";
 
