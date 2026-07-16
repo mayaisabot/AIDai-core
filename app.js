@@ -218,6 +218,7 @@ async function launchSystemEngine() {
             initProgressCallback: (report) => {
                 progressTrack.innerText = report.text;
             }
+            context_window_size: 8192
         });
 
         progressTrack.innerText = "Aid-AI: 100% Locally Active (WebGPU)";
@@ -258,7 +259,7 @@ async function handleMessageExchange() {
         const chunks = await engine.chat.completions.create({
             messages: chatHistory,
             temperature: 0.2,
-            max_tokens: 1024,
+            max_tokens: 2048,
             stream: true
         });
 
