@@ -210,7 +210,6 @@ Question 41:
 User: Hi or Hello, etc
 Assistant: Hi, I’m Aid-AI! I’m an AI tool you can use for medical/first-aid purposes. How may I assist you?`;
 // =========================================================================
-
 async function launchSystemEngine() {
     // Stop immediately if they opened it from file://
     if (window.location.protocol === "file:") return;
@@ -218,15 +217,18 @@ async function launchSystemEngine() {
     progressTrack.innerText = "Downloading Local AI Engine (WebGPU)...";
 
     try {
-        // We use webllm.CreateMLCEngine here to match the import at the top!
-        engine = await webllm.CreateMLCEngine(MODEL_ID, {
-            initProgressCallback: (report) => {
-                progressTrack.innerText = report.text;
+        // Pass context_window_size as the third argument directly to the factory
+        engine = await webllm.CreateMLCEngine(
+            MODEL_ID, 
+            {
+                initProgressCallback: (report) => {
+                    progressTrack.innerText = report.text;
+                }
             },
-            chatOpts: {
-                context_window_size: 8192 // This expands the memory limit!
+            {
+                context_window_size: 8192 // This expands the memory layout correctly
             }
-        });
+        );
 
         progressTrack.innerText = "Aid-AI: 100% Locally Active (WebGPU)";
         progressTrack.style.background = "#d4edda";
@@ -243,6 +245,7 @@ async function launchSystemEngine() {
         console.error(err);
     }
 }
+
 
 async function handleMessageExchange() {
     const rawPrompt = userText.value.trim();
