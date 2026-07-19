@@ -212,31 +212,34 @@ Assistant: Hi, I’m Aid-AI! I’m an AI tool you can use for medical/first-aid 
 // =========================================================================
 
 async function launchSystemEngine() {
-  try {
-        engine = await CreateMLCEngine(MODEL_ID, {
+    // Stop immediately if they opened it from file://
+    if (window.location.protocol === "file:") return;
+
+    progressTrack.innerText = "Downloading Local AI Engine (WebGPU)...";
+
+    try {
+        // We use webllm.CreateMLCEngine here to match the import at the top!
+        engine = await webllm.CreateMLCEngine(MODEL_ID, {
             initProgressCallback: (report) => {
                 progressTrack.innerText = report.text;
-            }, // <--- THIS COMMA IS CRITICAL! It separates the settings.
-            
+            },
             chatOpts: {
-                context_window_size: 8192
+                context_window_size: 8192 // This expands the memory limit!
             }
         });
 
         progressTrack.innerText = "Aid-AI: 100% Locally Active (WebGPU)";
         progressTrack.style.background = "#d4edda";
         progressTrack.style.color = "#155724";
-        progressTrack.style.borderColor = "#c3e6cb";
         
         userText.disabled = false;
         sendAction.disabled = false;
         userText.placeholder = "Query Aid-AI locally...";
-
-        // Set the system rules directly from the code block above
+        
         chatHistory = [{ role: "system", content: systemRules }];
 
     } catch (err) {
-        progressTrack.innerText = "WebGPU Compilation Failed. Use Chrome/Edge on desktop.";
+        progressTrack.innerText = "❌ WebGPU Failed. Use Chrome/Edge on a desktop computer.";
         console.error(err);
     }
 }
