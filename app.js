@@ -194,6 +194,10 @@ async function launchSystemEngine() {
         engine = await webllm.CreateMLCEngine(MODEL_ID, {
             initProgressCallback: (report) => {
                 progressTrack.innerText = report.text;
+            },
+            logConfig: {
+                context_window_size: 8192,
+                sliding_window_size: 8192
             }
         });
 
