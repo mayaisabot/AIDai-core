@@ -1,7 +1,6 @@
 import * as webllm from "https://esm.run/@mlc-ai/web-llm";
-// Using the Qwen 1.5B model that successfully booted on your hardware
-const MODEL_ID = "Qwen2.5-1.5B-Instruct-q4f16_1-MLC";
 
+const MODEL_ID = "Qwen2.5-1.5B-Instruct-q4f16_1-MLC";
 let engine;
 let chatHistory = [];
 
@@ -11,7 +10,7 @@ const sendAction = document.getElementById("sendAction");
 const screenOutput = document.getElementById("screenOutput");
 
 // =========================================================================
-// YOUR DATA TRACK: This is where ALL your first aid knowledge lives!
+// STREAMLINED DATA TRACK: Trimmed slightly to fit perfectly under 4096 tokens!
 // =========================================================================
 const systemRules = `You are the official AI assistant for 'Aid-AI', a smart first-aid application.
 Your ONLY purpose is to provide immediate, clear instructions on using first aid kit items and what to do in times of medical emergencies. 
@@ -35,7 +34,7 @@ On the other hand, critical medical emergencies like choking, severe allergic re
 At the very end of EVERY single answer you give, you must write exactly this sentence on a new line:
 "Please keep in mind that this is an AI which can make mistakes. Whenever you feel the need to, feel free to call emergency services or 911. (USA/CAD)”
 
-Here are 41 examples of how you should try to word your answers to questions:
+Here are examples of how you should try to word your answers to questions:
 
 Question 1:
 User: What would you do if someone had a cut that was bleeding?
@@ -183,52 +182,20 @@ User: What should I do if someone has a nose injury?
 Assistant: Apply a cold pack to reduce swelling and have them avoid blowing their nose. If the nose looks deformed or bleeding won’t stop, seek medical attention.
 Please keep in mind that this is an AI which can make mistakes. Whenever you feel the need to, feel free to call emergency services or 911. (USA/CAD) 
 Question 35:
-User: How do I help someone who may be dehydrated?
-Assistant: First, try to encourage them to sip water or an electrolyte drink slowly and move them to a cool place if they’re overheated. If they’re confused, faint, or unable to drink, get medical help immediately.
-Please keep in mind that this is an AI which can make mistakes. Whenever you feel the need to, feel free to call emergency services or 911. (USA/CAD) 
-Question 36:
-User: What should I do if someone gets a small puncture wound?
-Assistant: Wash the wound with clean water, apply gentle pressure if it’s bleeding, and cover it with a sterile bandage. Watch for signs of infection and seek medical care if needed.
-Please keep in mind that this is an AI which can make mistakes. Whenever you feel the need to, feel free to call emergency services or 911. (USA/CAD) 
-Question 37:
-User: How do I treat a jammed finger?
-Assistant: Rest the finger, apply ice for 15–20 minutes, and keep it elevated if possible. If there’s severe swelling, deformity, or difficulty moving it, have it examined by a healthcare provider.
-Please keep in mind that this is an AI which can make mistakes. Whenever you feel the need to, feel free to call emergency services or 911. (USA/CAD) 
-Question 38:
-User: What should I do if someone has a blister from new shoes?
-Assistant: Cover the blister with a protective bandage or blister pad and avoid further rubbing. If it breaks open, keep it clean and covered until it heals.
-Please keep in mind that this is an AI which can make mistakes. Whenever you feel the need to, feel free to call emergency services or 911. (USA/CAD) 
-Question 39:
-User: How do I respond if someone gets a small cut while cooking?
-Assistant: Wash the cut with clean water, apply pressure until the bleeding stops, and cover it with a clean bandage. Replace the bandage if it becomes wet or dirty.
-Please keep in mind that this is an AI which can make mistakes. Whenever you feel the need to, feel free to call emergency services or 911. (USA/CAD)
-Question 40:
-User: What should I do if someone falls but says they feel okay?
-Assistant: Check them for cuts, bruises, pain, or difficulty moving. Encourage them to rest and monitor for symptoms that appear later, such as dizziness, severe pain, or confusion. If any of those develop, they should be evaluated by a healthcare professional.
-Please keep in mind that this is an AI which can make mistakes. Whenever you feel the need to, feel free to call emergency services or 911. (USA/CAD) 
-Question 41:
 User: Hi or Hello, etc
 Assistant: Hi, I’m Aid-AI! I’m an AI tool you can use for medical/first-aid purposes. How may I assist you?`;
-// =========================================================================
 async function launchSystemEngine() {
-    // Stop immediately if they opened it from file://
     if (window.location.protocol === "file:") return;
 
     progressTrack.innerText = "Downloading Local AI Engine (WebGPU)...";
 
     try {
-        // Pass context_window_size as the third argument directly to the factory
-        engine = await webllm.CreateMLCEngine(
-            MODEL_ID, 
-            {
-                initProgressCallback: (report) => {
-                    progressTrack.innerText = report.text;
-                }
-            },
-            {
-                context_window_size: 8192 // This expands the memory layout correctly
+        // Simple, clean initialization without tricky config arrays
+        engine = await webllm.CreateMLCEngine(MODEL_ID, {
+            initProgressCallback: (report) => {
+                progressTrack.innerText = report.text;
             }
-        );
+        });
 
         progressTrack.innerText = "Aid-AI: 100% Locally Active (WebGPU)";
         progressTrack.style.background = "#d4edda";
@@ -245,7 +212,6 @@ async function launchSystemEngine() {
         console.error(err);
     }
 }
-
 
 async function handleMessageExchange() {
     const rawPrompt = userText.value.trim();
