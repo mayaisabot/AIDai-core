@@ -246,7 +246,7 @@ sendAction.addEventListener("click", async () => {
         const chunks = await engine.chat.completions.create({
             messages: chatHistory,
             temperature: 0.2, // Keeps answers strict and medical
-            max_tokens: 512, // Possible change
+            max_tokens: 1024, // Possible change
             stream: true      // Enables fast typewriter effect
         });
 
