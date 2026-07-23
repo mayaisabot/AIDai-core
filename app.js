@@ -195,8 +195,11 @@ async function launchSystemEngine() {
         engine = await webllm.CreateMLCEngine(MODEL_ID, {
             initProgressCallback: (report) => {
                 progressTrack.innerText = report.text;
+            },
+            {
+                context_window_size: 1536
             }
-        });
+        );
 
         progressTrack.innerText = "Aid-AI: 100% Locally Active (WebGPU)";
         progressTrack.style.background = "#d4edda";
