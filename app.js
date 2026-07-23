@@ -196,7 +196,7 @@ async function launchSystemEngine() {
             initProgressCallback: (report) => {
                 progressTrack.innerText = report.text;
             },
-            {
+        
                 context_window_size: 1536
             }
         );
