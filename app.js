@@ -191,13 +191,16 @@ async function launchSystemEngine() {
     progressTrack.innerText = "Downloading Local AI Engine (WebGPU)...";
 
     try {
-        // Clean initialization - letting the engine manage its own memory!
-        engine = await webllm.CreateMLCEngine(MODEL_ID, {
-            initProgressCallback: (report) => {
-                progressTrack.innerText = report.text;
+       // Clean initialization - letting the engine manage its own memory!
+        engine = await webllm.CreateMLCEngine(
+            MODEL_ID, 
+            {
+                initProgressCallback: (report) => {
+                    progressTrack.innerText = report.text;
+                }
             },
-        
-                context_window_size: 1536
+            {
+                context_window_size: 1024 // The absolute lowest we can go
             }
         );
 
@@ -243,7 +246,7 @@ sendAction.addEventListener("click", async () => {
         const chunks = await engine.chat.completions.create({
             messages: chatHistory,
             temperature: 0.2, // Keeps answers strict and medical
-            max_tokens: 1024, // Safe output limit
+            max_tokens: 512, // Possible change
             stream: true      // Enables fast typewriter effect
         });
 
