@@ -1,41 +1,34 @@
 import * as webllm from "https://esm.run/@mlc-ai/web-llm";
 
+// Using the fast, reliable 1.5B model
 const MODEL_ID = "Qwen2.5-1.5B-Instruct-q4f16_1-MLC";
 let engine;
 let chatHistory = [];
 
+// Grab your HTML elements (Make sure your HTML IDs match these!)
 const progressTrack = document.getElementById("progressTrack");
 const userText = document.getElementById("userText");
 const sendAction = document.getElementById("sendAction");
-const screenOutput = document.getElementById("screenOutput");
+const screenOutput = document.getElementById("screenOutput"); // The chat window container
 
 // =========================================================================
-// STREAMLINED DATA TRACK: Trimmed slightly to fit perfectly under 4096 tokens!
+// Bro I made it work for the 4096 memory limit
 // =========================================================================
 const systemRules = `You are the official AI assistant for 'Aid-AI', a smart first-aid application.
 Your ONLY purpose is to provide immediate, clear instructions on using first aid kit items and what to do in times of medical emergencies. 
-If the user asks about coding, math, or unrelated topics, politely decline and state that you are only programmed to handle first aid emergencies.
 
-Use the following core information for your answers:
 For CPR: 
-First, Call 911/emergency services.
-Secondly, Place your hands on the center of the chest and push down hard (2 inches deep onto their chest) and fast 30 times (100 times/min) 
-Third, the 30 chest compressions should be followed by 2 rescue breaths.
+1. Call 911/emergency services.
+2. Place hands on center of chest and push down hard (2 inches deep) and fast 30 times (100 times/min).
+3. Follow 30 chest compressions with 2 rescue breaths.
 
 To control bleeding:
-First: Place a clean cloth or gauze directly on the wound and apply it firmly with a small bit of pressure. 
-Second: If there is anything inside of the wound such as any objects, do not remove it. 
-Third: If the bleeding is not stopping, place a tourniquet 2-3 inches above the wound. It could be placed above clothing.
-
-Everyday first aid situations often involve minor to moderate physical injuries that can occur unexpectedly around the home or workplace, such as cuts, burns, nosebleeds, sprains, and fractures. For these common mishaps, the primary objectives of immediate care are to manage pain, minimize further tissue damage, and prevent infection. Simple but effective techniques—like applying direct pressure to control a bleeding laceration, running cool water over a fresh burn for ten minutes, or using the R.I.C.E. method (rest, ice, compression, and elevation) for joint sprains—can significantly improve recovery outcomes. When treating musculoskeletal injuries like suspected broken bones, the focus shifts entirely to stabilizing and immobilizing the limb to prevent inner nerve or vascular damage before medical professionals can take over.
-
-On the other hand, critical medical emergencies like choking, severe allergic reactions, heart attacks, strokes, and toxic poisoning require instant, time-sensitive interventions because they directly threaten a person's life. Recognizing the warning signs immediately, such as utilizing the F.A.S.T. protocol for a stroke or identifying sudden crushing chest pain during a heart attack, allows bystanders to activate emergency medical services without delay. While waiting for paramedics, providing targeted life-saving care—such as administering abdominal thrusts to a choking individual, assisting someone with an epinephrine auto-injector during anaphylaxis, or contacting Poison Control for ingested chemicals—serves as a vital bridge that keeps a patient stable when every single second counts.
+1. Place a clean cloth or gauze directly on the wound and apply firmly with pressure. 
+2. If there is an object inside the wound, do not remove it. 
+3. If bleeding does not stop, place a tourniquet 2-3 inches above the wound.
 
 At the very end of EVERY single answer you give, you must write exactly this sentence on a new line:
-"Please keep in mind that this is an AI which can make mistakes. Whenever you feel the need to, feel free to call emergency services or 911. (USA/CAD)”
-
-Here are examples of how you should try to word your answers to questions:
-
+"Please keep in mind that this is an AI which can make mistakes. Whenever you feel the need to, feel free to call emergency services or 911. (USA/CAD)"
 Question 1:
 User: What would you do if someone had a cut that was bleeding?
 Assistant: You would first need to make sure the area is safe, then apply direct pressure to the wound using a clean cloth or bandage. Once the bleeding slows or stops, you would clean the area if possible and cover it with a sterile dressing. If the bleeding does not stop the best action is to take said person to the doctor in your area or call 911.
@@ -184,20 +177,24 @@ Please keep in mind that this is an AI which can make mistakes. Whenever you fee
 Question 35:
 User: Hi or Hello, etc
 Assistant: Hi, I’m Aid-AI! I’m an AI tool you can use for medical/first-aid purposes. How may I assist you?`;
+
+
+// =========================================================================
+// Starts engine
+// =========================================================================
 async function launchSystemEngine() {
-    if (window.location.protocol === "file:") return;
+    if (window.location.protocol === "file:") {
+        progressTrack.innerText = "Error: Must be run on a local server, not file://";
+        return;
+    }
 
     progressTrack.innerText = "Downloading Local AI Engine (WebGPU)...";
 
     try {
-        // Simple, clean initialization without tricky config arrays
+        // Clean initialization - letting the engine manage its own memory!
         engine = await webllm.CreateMLCEngine(MODEL_ID, {
             initProgressCallback: (report) => {
                 progressTrack.innerText = report.text;
-            },
-            logConfig: {
-                context_window_size: 8192,
-                sliding_window_size: 8192
             }
         });
 
@@ -209,67 +206,63 @@ async function launchSystemEngine() {
         sendAction.disabled = false;
         userText.placeholder = "Query Aid-AI locally...";
         
+        // Initialize history with the rules
         chatHistory = [{ role: "system", content: systemRules }];
 
     } catch (err) {
         progressTrack.innerText = "❌ WebGPU Failed. Use Chrome/Edge on a desktop computer.";
-        console.error(err);
+        console.error("THE REAL ERROR:", err);
     }
 }
 
-async function handleMessageExchange() {
+// =========================================================================
+// Chat and streaming
+// =========================================================================
+sendAction.addEventListener("click", async () => {
     const rawPrompt = userText.value.trim();
-    if (!rawPrompt) return;
+    if (!rawPrompt || !engine) return;
 
-    screenOutput.innerHTML += `<div class="bubble user-bubble">${rawPrompt}</div>`;
+    // 1. Post User message to screen
     userText.value = "";
+    screenOutput.innerHTML += `<div style="margin-bottom: 10px;"><strong>You:</strong> ${rawPrompt}</div>`;
     
-    userText.disabled = true;
-    sendAction.disabled = true;
-
-    const aiBubbleId = "ai-" + Date.now();
-    screenOutput.innerHTML += `<div id="${aiBubbleId}" class="bubble ai-bubble">Thinking...</div>`;
+    // 2. Create an empty bubble for the AI response
+    const bubbleId = "ai-msg-" + Date.now();
+    screenOutput.innerHTML += `<div style="margin-bottom: 20px; color: #0056b3;"><strong>Aid-AI:</strong> <span id="${bubbleId}">...</span></div>`;
+    
+    // Auto-scroll to bottom
     screenOutput.scrollTop = screenOutput.scrollHeight;
 
-    try {
-        chatHistory.push({ role: "user", content: rawPrompt });
+    // 3. Add to memory and ask the AI
+    chatHistory.push({ role: "user", content: rawPrompt });
 
+    try {
         const chunks = await engine.chat.completions.create({
             messages: chatHistory,
-            temperature: 0.2,
-            max_tokens: 1024,
-            stream: true
+            temperature: 0.2, // Keeps answers strict and medical
+            max_tokens: 1024, // Safe output limit
+            stream: true      // Enables fast typewriter effect
         });
 
-        let fullResponse = "";
-        const aiBubble = document.getElementById(aiBubbleId);
-        aiBubble.innerText = ""; 
+        let aiResponse = "";
+        const bubbleElement = document.getElementById(bubbleId);
 
+        // 4. Stream the text word-by-word
         for await (const chunk of chunks) {
             const content = chunk.choices[0]?.delta?.content || "";
-            fullResponse += content;
-            aiBubble.innerText = fullResponse;
+            aiResponse += content;
+            bubbleElement.innerText = aiResponse; // Update screen instantly
             screenOutput.scrollTop = screenOutput.scrollHeight;
         }
-
-        chatHistory.push({ role: "assistant", content: fullResponse });
+        
+        // 5. Save the final answer to history
+        chatHistory.push({ role: "assistant", content: aiResponse });
 
     } catch (err) {
-        console.error("Inference Error: ", err);
-        document.getElementById(aiBubbleId).innerText = "Error generating local response.";
-    } finally {
-        userText.disabled = false;
-        sendAction.disabled = false;
-        userText.focus();
-    }
-}
-
-sendAction.addEventListener("click", handleMessageExchange);
-userText.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        handleMessageExchange();
+        document.getElementById(bubbleId).innerText = "An error occurred generating the response. Check the console.";
+        console.error("THE REAL ERROR:", err);
     }
 });
 
+// Start the engine when the script loads
 launchSystemEngine();
